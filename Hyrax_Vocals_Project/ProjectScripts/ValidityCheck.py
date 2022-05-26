@@ -86,25 +86,7 @@ def get_label(line):
     unmatched_lbls_list.append([line, line[label_index]])
     return False, matching_lbl
 
-
-def validation2(line):
-    res1 = duration_validation(line)
-    res2 = get_label(line)
-    line_lbl = res2[1]
-    res3 = find_duplications(line)
-    clean_line = res3[1]
-    # clean_line[label_index] = line_lbl
-    # valid_clean_final.append(clean_line)
-    if res1 and res2[0] and res3[0]:
-        clean_line[label_index] = line_lbl
-        valid_clean_final.append(clean_line)
-        valid_list.append(line)
-        return True, line_lbl, clean_line
-    else:
-        not_valid_list.append(line)
-        # print(line)
-        return False, ''
-
+   
 # this function calls all validation funcs
 def validation(line):
     res3 = find_duplications(line)
@@ -129,42 +111,6 @@ def validation(line):
 def find_unique_recordings(clean_line):
     if clean_line[name_index] not in unique_recordings:
         unique_recordings.append(clean_line[name_index])
-
-
-def find_contradicting_lbls2():
-    clean_list = valid_clean_final
-    contra_counter = 0
-    set1_counter, set2_counter, set3_counter = 0, 0, 0
-    for i in range(len(clean_list)):
-        for j in range(i+1, len(clean_list)):
-            if clean_list[i] != clean_list[j] and clean_list[i][duration_index] == clean_list[j][duration_index]:
-                if (clean_list[i][name_index] != clean_list[j][name_index]
-                        and clean_list[i][start_index] == clean_list[j][start_index] and clean_list[i][end_index] == clean_list[j][end_index]
-                        and clean_list[i][label_index] != clean_list[j][label_index]):
-                    if clean_list[i][label_index] in SET_HTC_HC_H and clean_list[j][label_index] in SET_HTC_HC_H:
-                        set1_counter += 1
-                        print("\nSET_HTC_HC_H dups" + str(set1_counter) + ": First line - "
-                              + str(clean_list[i]) + ", Second line - " + str(clean_list[j]))
-                    elif clean_list[i][label_index] in SET_GWB_GW and clean_list[j][label_index] in SET_GWB_GW:
-                        set2_counter += 1
-                        print("\nSET_GWB_GW dups" + str(set2_counter) + ": First line - "
-                              + str(clean_list[i]) + ", Second line - " + str(clean_list[j]))
-                    elif clean_list[i][label_index] in SET_GWH_HW and clean_list[j][label_index] in SET_GWH_HW :
-                        set3_counter += 1
-                        print("\nSET_GWH_HW dups" + str(set3_counter) + ": First line - "
-                              + str(clean_list[i]) + ", Second line - " + str(clean_list[j]))
-                    else:
-                        contra_counter += 1
-                        contra_lines.append(clean_list[i])
-                        contra_lines.append(clean_list[j])
-                        contra_list.append(str(contra_counter) + ". First line: " + str(clean_list[i]) +
-                                           ", Second line: " + str(clean_list[j]))
-                    # print("\n" + str(contra_counter) + ". First line: " + str(clean_list[i]) + ", Second line: " + str(clean_list[j]))
-                    # print("\n" + str(contra_counter) + ". First line label: " + str(clean_list[i]) + ", Second linelabel: " + str(clean_list[j]))
-                    # print("contra_counter: " + str(contra_counter))
-    # print("set1_counter: " + str(set1_counter))
-    # print("set2_counter: " + str(set2_counter))
-    # print("set3_counter: " + str(set3_counter))
 
 
 # this func looking for the same unit with different label
