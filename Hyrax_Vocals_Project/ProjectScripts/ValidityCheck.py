@@ -11,6 +11,7 @@ import copy
 INPUT_FILE = const.INPUT_LOGFILE
 # this file is the units file to use in Koe (the INPUT_FILE in a different format)
 OUTPUT_FILE = const.OUTPUT_FILES_FOLDER + "\\valid_units.csv"
+OUTPUT_TO_COPY = const.OUTPUT_FILES_FOLDER + "\\files_to_copy.csv"
 # OUTPUT_FILE = const.OUTPUT_UNITS_FILE
 # a list of the column names in the koe units file
 COLUMNS_NAMES = const.COLUMNS_NAMES
@@ -41,10 +42,12 @@ songs_list = []
 contra_list = []
 contra_lines = []
 valid_clean_final = []
-SET_HTC_HC_H = {'HTC', 'HC', 'H'}
-SET_GWB_GW = {'GWB', 'GW'}
-SET_GWH_HW = {'GWH', 'HW'}
 unique_recordings = []
+SET_HTC_HC_H = const.SET_HTC_HC_H
+SET_GWB_GW = const.SET_GWB_GW
+SET_GWH_HW = const.SET_GWH_HW
+SET_BAD_LABELS = {'GWHGS', 'GWHGW', 'GWHL', 'GWHM', 'GWHS', 'WHO',  'HWS', 'GWS', 'HWM', 'HWL'}
+
 
 # this func validates the start and end time and the units duration
 def duration_validation(line, filter_dur=FILTER_DUR):
@@ -54,10 +57,10 @@ def duration_validation(line, filter_dur=FILTER_DUR):
         negative_dur_list.append(list)
         bool_passed = False
     if filter_dur:
-        if unit_duration > DUR_LIMIT:
+        if unit_duration >= DUR_LIMIT:
             long_dur_list.append(line)
             bool_passed = False
-    return bool_passed
+    return bool_passed, unit_duration
 
 
 # this func finds duplicated units
@@ -76,6 +79,9 @@ def find_duplications(line):
 
 # this func validates the units label
 def get_label(line):
+    for bad_lbl in SET_BAD_LABELS:
+        if str(line[label_index]).upper().find(bad_lbl) != -1:
+            return False, ''
     matching_lbl = ''
     for i in range(0, len(LABELS)):
         lbl = LABELS[i]
@@ -86,7 +92,7 @@ def get_label(line):
     unmatched_lbls_list.append([line, line[label_index]])
     return False, matching_lbl
 
-   
+
 # this function calls all validation funcs
 def validation(line):
     res3 = find_duplications(line)
@@ -95,7 +101,7 @@ def validation(line):
         res2 = get_label(line)
         line_lbl = res2[1]
         clean_line = res3[1]
-        if res1 and res2[0] and res3[0]:
+        if res1[0] and res2[0] and res3[0]:
             clean_line[label_index] = line_lbl
             valid_clean_final.append(clean_line)
             find_unique_recordings(clean_line)
@@ -111,6 +117,8 @@ def validation(line):
 def find_unique_recordings(clean_line):
     if clean_line[name_index] not in unique_recordings:
         unique_recordings.append(clean_line[name_index])
+        return True
+    return False
 
 
 # this func looking for the same unit with different label
@@ -154,11 +162,28 @@ def count_lbls():
     print("GWH + HW: " + str(int(units_lbls[6] + units_lbls[7])))
 
 
+# def create_koe_unit(line, lbl):
+#     # the file name without the suffix '.wav'
+#     song_name = line[name_index][:-4]
+#     # turning start and end time from sec to msec
+#     start_time_ms = str(round(float(line[start_index])*1000))
+#     end_time_ms = str(round(float(line[end_index])*1000))
+#     # the label from the input file
+#     label_family = line[label_index].upper()
+#     label_subfamily = ''
+#     # the matching label from the LABELS list
+#     label = str(lbl)
+#     row = [song_name, start_time_ms, end_time_ms, label_family, label_subfamily, label]
+#     return row
+
+
 # opening the input file and creating the output file
 lbls_list = []
-with open(INPUT_FILE, 'r', newline='') as infile, open(OUTPUT_FILE, 'w', newline='') as outfile:
+with open(INPUT_FILE, 'r', newline='') as infile, open(OUTPUT_FILE, 'w', newline='') as outfile, \
+        open(OUTPUT_TO_COPY, 'w', newline='') as outfile2:
     csv_reader = csv.reader(infile, lineterminator='\n')
     csv_writer = csv.writer(outfile, lineterminator='\n')
+    csv_writer2 = csv.writer(outfile2, lineterminator='\n')
     # csv_writer.writerow(COLUMNS_NAMES)
     valid_counter = 0
     not_valid_counter = 0
@@ -173,6 +198,7 @@ with open(INPUT_FILE, 'r', newline='') as infile, open(OUTPUT_FILE, 'w', newline
                 bool_match = True
                 if line[name_index] not in songs_list:
                     songs_list.append(line[name_index])
+                    csv_writer2.writerow([line[name_index]])
                 lbl = valid_line[1]
                 lbls_list.append(lbl)
                 # new_row = create_koe_unit(line, lbl)
@@ -182,15 +208,16 @@ with open(INPUT_FILE, 'r', newline='') as infile, open(OUTPUT_FILE, 'w', newline
                 not_valid_counter += 1
         i += 1
     count_lbls()
-    # find_contradicting_lbls()
+    find_contradicting_lbls()
     # copying the output file into the input files folder
     # shutil.copyfile(OUTPUT_FILE, const.INPUT_UNITS_FILE)
+
 
 # printing the validity check results
 print("\nVALIDITY CHECK RESULTS:")
 print("The number of units that passed the validity check: " + str(valid_counter) + ", from "
       + str(len(songs_list)) + " recordings")
-# print("The number of unique recordings: " + str(len(unique_recordings)))
+print("The number of unique recordings: " + str(len(unique_recordings)))
 print("The number of units that failed the validity check: " + str(not_valid_counter))
 print("\nUnits failed due to the flowing reasons: ")
 print("* Duplicated units: " + str(len(duplications_list)))
