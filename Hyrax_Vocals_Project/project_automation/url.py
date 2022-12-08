@@ -1,0 +1,5 @@
+DB_URL = 'https://koe.io.ac.nz/dashboard/#!'
+SONGS_URL = 'https://koe.io.ac.nz/songs/?database=|&#!'
+UNITS_URL = 'https://koe.io.ac.nz/syllables/?database=|&#!'
+FEATURES_URL = 'https://koe.io.ac.nz/extraction/feature/#!'
+ORDINATION_URL = 'https://koe.io.ac.nz/extraction/ordination/#!'
